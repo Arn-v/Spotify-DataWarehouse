@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# Data files (Kaggle CSVs, exports)
+data/raw/*.csv
+data/raw/*.json
+data/exports/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+postgres_data/
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Alembic
+src/spotify_dw/db/migrations/versions/__pycache__/
