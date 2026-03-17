@@ -11,7 +11,7 @@ class DimArtist(TimestampMixin, Base):
 
     artist_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     spotify_artist_id: Mapped[str] = mapped_column(String(62), unique=True, nullable=False, index=True)
-    artist_name: Mapped[str] = mapped_column(String(500), nullable=False)
+    artist_name: Mapped[str] = mapped_column(String(1000), nullable=False)
     popularity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     followers: Mapped[int | None] = mapped_column(Integer, nullable=True)
 

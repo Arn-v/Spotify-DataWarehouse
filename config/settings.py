@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     spotify_client_secret: str = ""
 
     # Database
-    database_url: str = "postgresql://spotify:spotify@localhost:5432/spotify_dw"
+    database_url: str = "postgresql://spotify:spotify@localhost:5433/spotify_dw"
 
     # Logging
     log_level: str = "INFO"
