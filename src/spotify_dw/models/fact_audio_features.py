@@ -32,9 +32,7 @@ class FactAudioFeatures(Base):
     mode: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 0=minor, 1=major
 
     # Snapshot tracking
-    snapshot_date_key: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("dim_date.date_key"), nullable=True
-    )
+    snapshot_date_key: Mapped[int | None] = mapped_column(Integer, ForeignKey("dim_date.date_key"), nullable=True)
 
     def __repr__(self) -> str:
         return f"<FactAudioFeatures(key={self.audio_feature_key}, track={self.track_key})>"

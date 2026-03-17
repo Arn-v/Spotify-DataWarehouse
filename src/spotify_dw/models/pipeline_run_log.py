@@ -19,9 +19,7 @@ class PipelineRunLog(Base):
     errors_json: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON array of error messages
     duration_seconds: Mapped[float] = mapped_column(Float, default=0.0)
     endpoint_statuses_json: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON: endpoint -> status
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self) -> str:

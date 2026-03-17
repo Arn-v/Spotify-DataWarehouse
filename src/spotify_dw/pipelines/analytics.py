@@ -53,7 +53,7 @@ class AnalyticsPipeline(BasePipeline):
             FROM fact_track_popularity
             ORDER BY date_key
         """)
-        pop_df = pd.read_sql(query, self.session.bind)
+        pop_df = pd.read_sql(query, self.session.get_bind())
 
         if pop_df.empty:
             self.logger.info("No popularity data for trending analysis")
@@ -94,7 +94,7 @@ class AnalyticsPipeline(BasePipeline):
         """)
 
         try:
-            genre_df = pd.read_sql(query, self.session.bind)
+            genre_df = pd.read_sql(query, self.session.get_bind())
         except Exception as e:
             self.logger.warning(f"Genre analysis query failed: {e}")
             return 0
@@ -131,7 +131,7 @@ class AnalyticsPipeline(BasePipeline):
               AND valence IS NOT NULL
               AND tempo IS NOT NULL
         """)
-        audio_df = pd.read_sql(query, self.session.bind)
+        audio_df = pd.read_sql(query, self.session.get_bind())
 
         if audio_df.empty or len(audio_df) < 5:
             self.logger.info("Not enough audio data for profiling")

@@ -30,12 +30,12 @@ class BaseAnalyzer(ABC):
             return False
         return True
 
-    def _export(self, df: pd.DataFrame, path: str, format: str = "csv") -> None:
+    def _export(self, df: pd.DataFrame, path: str, file_format: str = "csv") -> None:
         """Export results to a file."""
-        if format == "csv":
+        if file_format == "csv":
             df.to_csv(path, index=False)
-        elif format == "json":
+        elif file_format == "json":
             df.to_json(path, orient="records", indent=2)
         else:
-            raise ValueError(f"Unsupported export format: {format}")
-        self.logger.info(f"Exported {len(df)} rows to {path}")
+            raise ValueError(f"Unsupported export format: {file_format}")
+        self.logger.info("Exported results", extra={"rows": len(df), "path": path})

@@ -1,5 +1,6 @@
 """Pipeline: Load Kaggle historical CSV data into the data warehouse."""
 
+import hashlib
 from datetime import date
 from pathlib import Path
 
@@ -47,7 +48,6 @@ class KaggleLoadPipeline(BasePipeline):
         # Transform artists (also produces bridge and genre data)
         artist_transformer = ArtistTransformer()
         artists_df = artist_transformer.transform(raw_df)
-        bridge_data = artist_transformer.bridge_data
         genre_data = artist_transformer.genre_data
 
         # Transform audio features
@@ -64,9 +64,7 @@ class KaggleLoadPipeline(BasePipeline):
         # Load dim_genre
         if not genre_data.empty:
             unique_genres = genre_data[["genre"]].drop_duplicates().rename(columns={"genre": "genre_name"})
-            genre_loader = PostgresLoader(
-                self.session, DimGenre, conflict_columns=["genre_name"], batch_size=500
-            )
+            genre_loader = PostgresLoader(self.session, DimGenre, conflict_columns=["genre_name"], batch_size=500)
             total_loaded += genre_loader.load(unique_genres)
 
         # Load dim_album
@@ -79,20 +77,16 @@ class KaggleLoadPipeline(BasePipeline):
                 total_loaded += album_loader.load(albums_df)
 
         # Load dim_artist
-        artist_loader = PostgresLoader(
-            self.session, DimArtist, conflict_columns=["spotify_artist_id"], batch_size=500
-        )
+        artist_loader = PostgresLoader(self.session, DimArtist, conflict_columns=["spotify_artist_id"], batch_size=500)
         # Generate synthetic IDs for Kaggle artists (no Spotify artist IDs in CSV)
         artists_df["spotify_artist_id"] = artists_df["artist_name"].apply(
-            lambda name: f"kaggle_{hash(name) % 10**12}"
+            lambda name: f"kaggle_{hashlib.md5(name.encode()).hexdigest()[:12]}"
         )
         total_loaded += artist_loader.load(artists_df)
 
         # Load dim_track
         track_load_df = tracks_df[["spotify_track_id", "track_name", "duration_seconds", "explicit"]].copy()
-        track_loader = PostgresLoader(
-            self.session, DimTrack, conflict_columns=["spotify_track_id"], batch_size=500
-        )
+        track_loader = PostgresLoader(self.session, DimTrack, conflict_columns=["spotify_track_id"], batch_size=500)
         total_loaded += track_loader.load(track_load_df)
 
         # Load fact_audio_features
@@ -138,7 +132,7 @@ class KaggleLoadPipeline(BasePipeline):
         """Extract unique albums from the raw data."""
         albums = df[["album_name"]].drop_duplicates().dropna()
         albums["spotify_album_id"] = albums["album_name"].apply(
-            lambda name: f"kaggle_album_{hash(name) % 10**12}"
+            lambda name: f"kaggle_album_{hashlib.md5(name.encode()).hexdigest()[:12]}"
         )
         return albums
 
@@ -148,9 +142,20 @@ class KaggleLoadPipeline(BasePipeline):
         Requires track_key lookups — maps spotify_track_id to track_key.
         """
         audio_cols = [
-            "spotify_track_id", "danceability", "energy", "loudness", "speechiness",
-            "acousticness", "instrumentalness", "liveness", "valence",
-            "tempo", "tempo_category", "time_signature", "key", "mode",
+            "spotify_track_id",
+            "danceability",
+            "energy",
+            "loudness",
+            "speechiness",
+            "acousticness",
+            "instrumentalness",
+            "liveness",
+            "valence",
+            "tempo",
+            "tempo_category",
+            "time_signature",
+            "key",
+            "mode",
         ]
         available = [c for c in audio_cols if c in df.columns]
         audio_df = df[available].copy()

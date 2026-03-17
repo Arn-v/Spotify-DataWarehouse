@@ -14,7 +14,7 @@ class GenreAnalyzer(BaseAnalyzer):
         - Genre ranking by track count and popularity
     """
 
-    REQUIRED_COLUMNS = ["genre_key", "track_count"]
+    REQUIRED_COLUMNS = ["genre_key"]
 
     def analyze(self, df: pd.DataFrame, period: str = "monthly") -> pd.DataFrame:
         """Compute genre statistics.
@@ -48,20 +48,37 @@ class GenreAnalyzer(BaseAnalyzer):
         if "track_count" not in df.columns:
             df["track_count"] = 0
 
-        result = df[["genre_key", "period", "period_date", "track_count",
-                      "avg_popularity", "avg_danceability", "avg_energy", "avg_tempo"]].copy()
+        result = df[
+            [
+                "genre_key",
+                "period",
+                "period_date",
+                "track_count",
+                "avg_popularity",
+                "avg_danceability",
+                "avg_energy",
+                "avg_tempo",
+            ]
+        ].copy()
 
         self.logger.info(f"Genre analysis: {len(result)} genres analyzed")
         return result
 
     def _aggregate_from_tracks(self, df: pd.DataFrame) -> pd.DataFrame:
         """Aggregate track-level data into genre-level statistics."""
-        agg = df.groupby("genre_key").agg(
-            track_count=("genre_key", "count"),
-            avg_popularity=("popularity", "mean"),
-            avg_danceability=("danceability", "mean") if "danceability" in df.columns else ("genre_key", "count"),
-            avg_energy=("energy", "mean") if "energy" in df.columns else ("genre_key", "count"),
-            avg_tempo=("tempo", "mean") if "tempo" in df.columns else ("genre_key", "count"),
-        ).reset_index()
+        agg_dict: dict[str, tuple[str, str]] = {
+            "track_count": ("genre_key", "count"),
+            "avg_popularity": ("popularity", "mean"),
+        }
+        for col in ("danceability", "energy", "tempo"):
+            if col in df.columns:
+                agg_dict[f"avg_{col}"] = (col, "mean")
+
+        agg = df.groupby("genre_key").agg(**agg_dict).reset_index()
+
+        # Fill missing metric columns with 0.0
+        for col in ("avg_danceability", "avg_energy", "avg_tempo"):
+            if col not in agg.columns:
+                agg[col] = 0.0
 
         return agg

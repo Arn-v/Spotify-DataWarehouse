@@ -60,7 +60,7 @@ class IngestionPipeline(BasePipeline):
         tracks_df = track_transformer.transform(new_df)
 
         artist_transformer = ArtistTransformer()
-        artists_df = artist_transformer.transform(new_df)
+        artist_transformer.transform(new_df)
 
         # Ensure today's date in dim_date
         today = date.today()
@@ -74,9 +74,7 @@ class IngestionPipeline(BasePipeline):
             albums_df = new_df[["spotify_album_id", "album_name", "album_type", "total_tracks"]].drop_duplicates(
                 subset=["spotify_album_id"]
             )
-            album_loader = PostgresLoader(
-                self.session, DimAlbum, conflict_columns=["spotify_album_id"]
-            )
+            album_loader = PostgresLoader(self.session, DimAlbum, conflict_columns=["spotify_album_id"])
             total_loaded += album_loader.load(albums_df)
 
         # Load dim_artist
@@ -92,20 +90,20 @@ class IngestionPipeline(BasePipeline):
 
             if artist_rows:
                 import pandas as pd
+
                 artists_load_df = pd.DataFrame(artist_rows).drop_duplicates(subset=["spotify_artist_id"])
-                artist_loader = PostgresLoader(
-                    self.session, DimArtist, conflict_columns=["spotify_artist_id"]
-                )
+                artist_loader = PostgresLoader(self.session, DimArtist, conflict_columns=["spotify_artist_id"])
                 total_loaded += artist_loader.load(artists_load_df)
 
         # Load dim_track
         track_load_df = tracks_df[["spotify_track_id", "track_name", "duration_seconds", "explicit"]].copy()
         if "isrc" in tracks_df.columns:
             track_load_df["isrc"] = tracks_df["isrc"]
-        track_loader = PostgresLoader(
-            self.session, DimTrack, conflict_columns=["spotify_track_id"]
-        )
+        track_loader = PostgresLoader(self.session, DimTrack, conflict_columns=["spotify_track_id"])
         total_loaded += track_loader.load(track_load_df)
+
+        # Build track_key map once for audio features and popularity facts
+        track_key_map = self._get_track_key_map()
 
         # Fetch and load audio features
         track_ids = tracks_df["spotify_track_id"].tolist()
@@ -116,7 +114,6 @@ class IngestionPipeline(BasePipeline):
             audio_df = audio_transformer.transform(audio_df)
 
             # Map to track_keys
-            track_key_map = self._get_track_key_map()
             audio_df["track_key"] = audio_df["spotify_track_id"].map(track_key_map)
             audio_df = audio_df.dropna(subset=["track_key"])
             audio_df["track_key"] = audio_df["track_key"].astype(int)
@@ -135,7 +132,6 @@ class IngestionPipeline(BasePipeline):
 
         # Load popularity facts
         if "popularity" in tracks_df.columns:
-            track_key_map = self._get_track_key_map()
             pop_df = tracks_df[["spotify_track_id", "popularity"]].copy()
             pop_df["track_key"] = pop_df["spotify_track_id"].map(track_key_map)
             pop_df = pop_df.dropna(subset=["track_key"])

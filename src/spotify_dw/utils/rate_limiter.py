@@ -1,8 +1,8 @@
 """Token-bucket rate limiter for Spotify API calls."""
 
 import logging
-import time
 import threading
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -26,19 +26,22 @@ class RateLimiter:
 
     def acquire(self) -> None:
         """Block until a call is allowed."""
-        with self._lock:
-            now = time.monotonic()
-            # Remove expired timestamps
-            self._calls = [t for t in self._calls if now - t < self.period]
+        while True:
+            with self._lock:
+                now = time.monotonic()
+                # Remove expired timestamps
+                self._calls = [t for t in self._calls if now - t < self.period]
 
-            if len(self._calls) >= self.max_calls:
-                # Wait until the oldest call expires
+                if len(self._calls) < self.max_calls:
+                    self._calls.append(now)
+                    return
+
+                # Calculate sleep time outside the lock
                 sleep_time = self.period - (now - self._calls[0])
-                if sleep_time > 0:
-                    logger.debug(f"Rate limited, sleeping {sleep_time:.2f}s")
-                    time.sleep(sleep_time)
 
-            self._calls.append(time.monotonic())
+            if sleep_time > 0:
+                logger.debug("Rate limited, sleeping %.2fs", sleep_time)
+                time.sleep(sleep_time)
 
     def __enter__(self) -> "RateLimiter":
         self.acquire()

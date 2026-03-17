@@ -5,7 +5,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,7 @@ class PipelineResult:
     rows_loaded: int = 0
     errors: list[str] = field(default_factory=list)
     duration_seconds: float = 0.0
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     endpoint_statuses: dict[str, str] = field(default_factory=dict)
 
 
@@ -78,7 +78,11 @@ class BasePipeline(ABC):
         )
 
     def _log_run(self, result: PipelineResult) -> None:
-        """Write the pipeline result to the pipeline_run_log table."""
+        """Write the pipeline result to the pipeline_run_log table.
+
+        Uses a fresh session when the pipeline failed, since the original
+        session may be in a rolled-back state.
+        """
         try:
             log_entry = PipelineRunLog(
                 pipeline_name=self.__class__.__name__,
@@ -89,9 +93,15 @@ class BasePipeline(ABC):
                 duration_seconds=result.duration_seconds,
                 endpoint_statuses_json=json.dumps(result.endpoint_statuses) if result.endpoint_statuses else None,
                 started_at=result.timestamp,
-                completed_at=datetime.now(timezone.utc),
+                completed_at=datetime.now(UTC),
             )
-            self.session.add(log_entry)
-            self.session.flush()
+            if result.status == "failure":
+                from spotify_dw.db.session import SessionFactory
+
+                with SessionFactory().session() as fresh_session:
+                    fresh_session.add(log_entry)
+            else:
+                self.session.add(log_entry)
+                self.session.flush()
         except Exception as e:
-            self.logger.warning(f"Failed to log pipeline run: {e}")
+            self.logger.warning("Failed to log pipeline run", extra={"error": str(e)})

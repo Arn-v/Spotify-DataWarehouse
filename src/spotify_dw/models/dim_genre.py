@@ -3,10 +3,10 @@
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from spotify_dw.models.base import Base
+from spotify_dw.models.base import Base, TimestampMixin
 
 
-class DimGenre(Base):
+class DimGenre(TimestampMixin, Base):
     __tablename__ = "dim_genre"
 
     genre_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

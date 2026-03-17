@@ -3,8 +3,8 @@
 import logging
 
 from apscheduler.schedulers.blocking import BlockingScheduler
-
 from config.settings import get_settings
+
 from spotify_dw.db.session import SessionFactory
 from spotify_dw.pipelines.analytics import AnalyticsPipeline
 from spotify_dw.pipelines.ingestion import IngestionPipeline
@@ -63,7 +63,5 @@ def create_scheduler() -> BlockingScheduler:
         coalesce=True,
     )
 
-    logger.info(
-        f"Scheduler configured: full cycle every {settings.scheduler_interval_hours} hours"
-    )
+    logger.info(f"Scheduler configured: full cycle every {settings.scheduler_interval_hours} hours")
     return scheduler

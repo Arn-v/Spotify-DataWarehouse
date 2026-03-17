@@ -1,34 +1,34 @@
 """Mood Profiles page — audio feature clusters and radar charts."""
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-
 import pandas as pd
 import streamlit as st
+from dashboard.components.charts import cluster_scatter, radar_chart
 from sqlalchemy import text
 
-from dashboard.components.charts import cluster_scatter, radar_chart
 from spotify_dw.db.session import SessionFactory
 
-st.header("Mood Profiles")
-st.markdown("Audio feature clusters reveal marketing-relevant mood segments.")
 
-try:
+@st.cache_data(ttl=300)
+def _load_profiles() -> pd.DataFrame:
+    """Load audio profiles with caching."""
     factory = SessionFactory()
-    engine = factory.engine
-
-    with engine.connect() as conn:
-        profiles = pd.read_sql(
+    with factory.session() as session:
+        return pd.read_sql(
             text("""
                 SELECT cluster_id, cluster_label, centroid_tempo, centroid_energy,
                        centroid_valence, centroid_danceability, track_count, snapshot_date
                 FROM agg_audio_profiles
                 ORDER BY track_count DESC
             """),
-            conn,
+            session.get_bind(),
         )
+
+
+st.header("Mood Profiles")
+st.markdown("Audio feature clusters reveal marketing-relevant mood segments.")
+
+try:
+    profiles = _load_profiles()
 
     if profiles.empty:
         st.info("No mood profiles available. Run the analytics pipeline first.")
@@ -52,8 +52,16 @@ try:
 
         # Detail table
         st.subheader("Cluster Details")
-        display_df = profiles[["cluster_label", "track_count", "centroid_danceability",
-                                "centroid_energy", "centroid_valence", "centroid_tempo"]].copy()
+        display_df = profiles[
+            [
+                "cluster_label",
+                "track_count",
+                "centroid_danceability",
+                "centroid_energy",
+                "centroid_valence",
+                "centroid_tempo",
+            ]
+        ].copy()
         display_df.columns = ["Mood Segment", "Tracks", "Danceability", "Energy", "Valence", "Tempo (BPM)"]
         st.dataframe(display_df, use_container_width=True)
 

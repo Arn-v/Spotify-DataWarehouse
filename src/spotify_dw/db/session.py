@@ -1,14 +1,13 @@
 """Database session factory — singleton pattern for SQLAlchemy engine and sessions."""
 
 import logging
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
+from config.settings import get_settings
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
-
-from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -41,14 +40,15 @@ class SessionFactory:
                 max_overflow=10,
                 pool_pre_ping=True,
             )
-            self._session_maker = sessionmaker(bind=self._engine)
+            self._session_maker = sessionmaker(self._engine)
             logger.info("Database engine initialized", extra={"url": settings.database_url.split("@")[-1]})
 
     @property
     def engine(self) -> Engine:
         """Return the SQLAlchemy engine, initializing if needed."""
         self._initialize()
-        assert self._engine is not None
+        if self._engine is None:
+            raise RuntimeError("Database engine failed to initialize")
         return self._engine
 
     @contextmanager
@@ -58,7 +58,8 @@ class SessionFactory:
         Commits on success, rolls back on exception, always closes.
         """
         self._initialize()
-        assert self._session_maker is not None
+        if self._session_maker is None:
+            raise RuntimeError("Session maker failed to initialize")
         session = self._session_maker()
         try:
             yield session

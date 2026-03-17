@@ -3,6 +3,7 @@
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+
 from dashboard.components.theme import PLOTLY_COLORS, PLOTLY_LAYOUT
 
 

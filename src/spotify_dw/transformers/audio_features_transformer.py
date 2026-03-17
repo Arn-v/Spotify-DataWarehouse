@@ -6,8 +6,13 @@ from spotify_dw.transformers.base import BaseTransformer
 
 # Audio features that should be in [0, 1] range
 NORMALIZED_FEATURES = [
-    "danceability", "energy", "speechiness", "acousticness",
-    "instrumentalness", "liveness", "valence",
+    "danceability",
+    "energy",
+    "speechiness",
+    "acousticness",
+    "instrumentalness",
+    "liveness",
+    "valence",
 ]
 
 TEMPO_BINS = {"slow": (0, 90), "mid": (90, 140), "fast": (140, float("inf"))}

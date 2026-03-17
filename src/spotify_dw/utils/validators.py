@@ -7,7 +7,7 @@ class TrackValidator(BaseModel):
     """Validates a single track record before loading."""
 
     spotify_track_id: str = Field(min_length=1, max_length=62)
-    track_name: str = Field(min_length=1, max_length=500)
+    track_name: str = Field(min_length=1, max_length=1000)
     duration_seconds: float = Field(ge=0)
     explicit: bool = False
 

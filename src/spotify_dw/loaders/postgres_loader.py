@@ -4,7 +4,6 @@ import logging
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import inspect
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -82,9 +81,7 @@ class PostgresLoader(BaseLoader):
             update_cols = {
                 col.name: stmt.excluded[col.name]
                 for col in self.table.columns
-                if col.name not in self.conflict_columns
-                and not col.primary_key
-                and col.name in records[0]
+                if col.name not in self.conflict_columns and not col.primary_key and col.name in records[0]
             }
             if update_cols:
                 stmt = stmt.on_conflict_do_update(
@@ -97,7 +94,7 @@ class PostgresLoader(BaseLoader):
             stmt = stmt.on_conflict_do_nothing(index_elements=self.conflict_columns)
 
         result = self.session.execute(stmt)
-        return result.rowcount if result.rowcount else len(records)
+        return result.rowcount or 0
 
     def load_simple(self, df: pd.DataFrame) -> int:
         """Simple bulk insert without upsert — for tables without conflict columns (e.g., facts).

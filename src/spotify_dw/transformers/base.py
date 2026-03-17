@@ -38,6 +38,7 @@ class BaseTransformer(ABC):
         if strategy == "drop":
             return df.dropna(subset=subset)
         elif strategy == "fill_default":
+            df = df.copy()
             if columns:
                 for col in columns:
                     if df[col].dtype in ("float64", "int64"):

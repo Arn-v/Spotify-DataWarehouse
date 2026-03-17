@@ -47,9 +47,7 @@ class AudioProfileAnalyzer(BaseAnalyzer):
         features = df[CLUSTER_FEATURES].dropna()
 
         if len(features) < self.n_clusters:
-            self.logger.warning(
-                f"Not enough data points ({len(features)}) for {self.n_clusters} clusters"
-            )
+            self.logger.warning(f"Not enough data points ({len(features)}) for {self.n_clusters} clusters")
             return pd.DataFrame()
 
         # Scale features for clustering
@@ -72,16 +70,18 @@ class AudioProfileAnalyzer(BaseAnalyzer):
             # Auto-label based on centroid characteristics
             label = self._generate_label(centroids[i])
 
-            profiles.append({
-                "cluster_id": i,
-                "cluster_label": label,
-                "centroid_danceability": round(centroids[i][0], 3),
-                "centroid_energy": round(centroids[i][1], 3),
-                "centroid_valence": round(centroids[i][2], 3),
-                "centroid_tempo": round(centroids[i][3], 1),
-                "track_count": track_count,
-                "snapshot_date": pd.Timestamp.now().date(),
-            })
+            profiles.append(
+                {
+                    "cluster_id": i,
+                    "cluster_label": label,
+                    "centroid_danceability": round(centroids[i][0], 3),
+                    "centroid_energy": round(centroids[i][1], 3),
+                    "centroid_valence": round(centroids[i][2], 3),
+                    "centroid_tempo": round(centroids[i][3], 1),
+                    "track_count": track_count,
+                    "snapshot_date": pd.Timestamp.now().date(),
+                }
+            )
 
         result = pd.DataFrame(profiles)
         self.logger.info(f"Audio profiling: {self.n_clusters} clusters identified")

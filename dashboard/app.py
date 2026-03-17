@@ -16,13 +16,16 @@ st.set_page_config(
 )
 
 # Apply dark theme
-st.markdown("""
+st.markdown(
+    """
 <style>
     .stMetric .metric-container { background-color: #1a1a2e; border-radius: 10px; padding: 15px; }
     .block-container { padding-top: 2rem; }
     h1 { color: #1DB954; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 st.title("Spotify Data Warehouse")
 st.markdown("**Marketing Analytics Dashboard** — Trending tracks, genre insights, and mood profiles.")

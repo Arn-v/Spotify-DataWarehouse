@@ -9,9 +9,7 @@ def date_range_filter(default_days: int = 30) -> tuple[date, date]:
     """Sidebar date range picker."""
     st.sidebar.subheader("Date Range")
     end_date = st.sidebar.date_input("End date", value=date.today())
-    start_date = st.sidebar.date_input(
-        "Start date", value=end_date - timedelta(days=default_days)
-    )
+    start_date = st.sidebar.date_input("Start date", value=end_date - timedelta(days=default_days))
     return start_date, end_date
 
 

@@ -5,16 +5,27 @@ from typing import Any
 
 import pandas as pd
 import spotipy
+from config.settings import get_settings
 from spotipy.oauth2 import SpotifyClientCredentials
 
-from config.settings import get_settings
 from spotify_dw.extractors.base import BaseExtractor
 from spotify_dw.utils.rate_limiter import RateLimiter
 
 logger = logging.getLogger(__name__)
 
 # Genre seeds for the recommendations endpoint
-DEFAULT_GENRE_SEEDS = ["pop", "rock", "hip-hop", "electronic", "r-n-b", "latin", "classical", "jazz", "country", "indie"]
+DEFAULT_GENRE_SEEDS = [
+    "pop",
+    "rock",
+    "hip-hop",
+    "electronic",
+    "r-n-b",
+    "latin",
+    "classical",
+    "jazz",
+    "country",
+    "indie",
+]
 
 
 class SpotifyAPIExtractor(BaseExtractor):
@@ -173,7 +184,7 @@ class SpotifyAPIExtractor(BaseExtractor):
         all_features = []
 
         for i in range(0, len(track_ids), 100):
-            batch = track_ids[i:i + 100]
+            batch = track_ids[i : i + 100]
             try:
                 with self.rate_limiter:
                     features = client.audio_features(batch)

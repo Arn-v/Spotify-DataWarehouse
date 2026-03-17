@@ -39,22 +39,14 @@ class ArtistTransformer(BaseTransformer):
         exploded["is_primary"] = exploded.groupby("spotify_track_id").cumcount() == 0
 
         # Build unique artists DataFrame
-        unique_artists = (
-            exploded[["artist_name"]]
-            .drop_duplicates(subset=["artist_name"])
-            .reset_index(drop=True)
-        )
+        unique_artists = exploded[["artist_name"]].drop_duplicates(subset=["artist_name"]).reset_index(drop=True)
 
         # Build track-artist bridge data
         bridge_data = exploded[["spotify_track_id", "artist_name", "is_primary"]].copy()
 
         # Attach genre info if available
         if "genre" in df.columns:
-            genre_data = (
-                exploded[["artist_name", "genre"]]
-                .dropna(subset=["genre"])
-                .drop_duplicates()
-            )
+            genre_data = exploded[["artist_name", "genre"]].dropna(subset=["genre"]).drop_duplicates()
             genre_data["genre"] = genre_data["genre"].astype(str).str.strip().str.lower()
         else:
             genre_data = pd.DataFrame(columns=["artist_name", "genre"])
